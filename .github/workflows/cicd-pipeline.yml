@@ -1,4 +1,4 @@
-
+  
 name: CICD Pipeline
 
 on:
@@ -8,7 +8,7 @@ on:
 jobs:
   compile:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu 26
 
     steps:
     - uses: actions/checkout@v4
@@ -19,4 +19,27 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Build with Maven
-      run: mvn -B package --file pom.xml
+      run: mvn compile
+  
+  Security-checks:
+    runs-on: ubuntu 26
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: trivy Installation
+      run: |
+        sudo apt-get install wget gnupg
+        wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+        echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+        sudo apt-get update -y
+        sudo apt-get install trivy -y
+        
+    - name: Trivy Fs Scan
+      run: trivy fs --format table -o fs-report.json .
+      
+    - name: Gitleaks scan
+    - run: sudo apt install gitleaks -y
+    
+    - name: Gitleaks code Scan
+    - run: gitleaks detect source . -r gitleaks-report.json
+
